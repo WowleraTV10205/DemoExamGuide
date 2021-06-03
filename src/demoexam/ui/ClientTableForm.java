@@ -4,14 +4,19 @@ import demoexam.utils.BaseForm;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.sql.*;
 
 public class ClientTableForm extends BaseForm {
     private JPanel mainPanel;
     private JTable table;
 
+
     public ClientTableForm() {
         //выбор панели
+        setVisible(true);
+        pack();
         setContentPane(mainPanel);
         //увеличение строк
         table.setRowHeight(25);
@@ -24,6 +29,7 @@ public class ClientTableForm extends BaseForm {
         try {
             // Подключение к БД new_schema по адресу localhost, пользователь - root, пароль - 123456
             Connection connection = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/demoexam?serverTimeZone=UTC","root","");
+
 
             // Подготовка запроса
             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM client");
@@ -55,5 +61,28 @@ public class ClientTableForm extends BaseForm {
         }
         // Установка созданной модели на объект таблицы
         table.setModel(client_mdl);
+
+        table.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                int row = table.getSelectedRow();
+                if (row != -1 && e.getKeyCode() == KeyEvent.VK_DELETE) {
+                    if (JOptionPane.showConfirmDialog(null, "Вы хотите удалить данную строку?", "Внимание", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                        int id = Integer.parseInt((String) table.getValueAt(row, 0));
+                        try {
+                            Connection c = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/demoexam?serverTimeZone=UTC", "root", "");
+                            String sql = "DELETE FROM client WHERE id=?";
+                            PreparedStatement ps = c.prepareStatement(sql);
+                            ps.setInt(1, id);
+                            ps.executeUpdate();
+                            new ClientTableForm();
+                            dispose();
+                        } catch (SQLException throwables) {
+                            throwables.printStackTrace();
+                        }
+                    }
+                }
+            }
+        });
     }
 }
